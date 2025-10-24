@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camouflaged Messaging App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            padding: 0.75rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .otp-display {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+            font-weight: bold;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 5px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">🔐 SecureChat</div>
+        
+        <div id="loginForm">
+            <div id="messageDiv"></div>
+            
+            <div class="form-group">
+                <label for="phoneNumber">Phone Number</label>
+                <input type="tel" id="phoneNumber" placeholder="+91 9876543210" required>
+            </div>
+            
+            <button type="button" class="btn" id="sendOTPBtn" onclick="sendOTP()">
+                <span id="otpBtnText">Send OTP</span>
+                <span id="otpLoading" class="loading hidden"></span>
+            </button>
+        </div>
+
+        <div id="otpForm" class="hidden">
+            <div id="otpMessageDiv"></div>
+            
+            <div class="form-group">
+                <label for="otpInput">Enter OTP</label>
+                <input type="text" id="otpInput" placeholder="Enter 6-digit OTP" maxlength="6" required>
+            </div>
+            
+            <button type="button" class="btn" id="verifyOTPBtn" onclick="verifyOTP()">
+                <span id="verifyBtnText">Verify OTP</span>
+                <span id="verifyLoading" class="loading hidden"></span>
+            </button>
+            
+            <button type="button" class="btn" onclick="resendOTP()" style="background: #6c757d; margin-top: 0.5rem;">
+                Resend OTP
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentPhoneNumber = '';
+        let isProcessing = false; // Prevent multiple simultaneous requests
+
+        function showMessage(elementId, message, type) {
+            const div = document.getElementById(elementId);
+            if (message) {
+                div.innerHTML = `<div class="message ${type}">${message}</div>`;
+            } else {
+                div.innerHTML = '';
+            }
+        }
+
+        function setLoading(btnId, loadingId, textId, loading) {
+            const btn = document.getElementById(btnId);
+            const loadingSpinner = document.getElementById(loadingId);
+            const text = document.getElementById(textId);
+            
+            if (btn) btn.disabled = loading;
+            if (loadingSpinner) loadingSpinner.classList.toggle('hidden', !loading);
+            if (text) text.classList.toggle('hidden', loading);
+        }
+
+        function validatePhoneNumber(phoneNumber) {
+            // Remove all non-digit characters except +
+            const cleaned = phoneNumber.replace(/[^\d+]/g, '');
+            
+            // Check if it's a valid format (at least 10 digits)
+            if (cleaned.length < 10) {
+                return false;
+            }
+            
+            return true;
+        }
+
+        async function sendOTP() {
+            // Prevent multiple simultaneous requests
+            if (isProcessing) {
+                return;
+            }
+
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            
+            // Clear previous messages
+            showMessage('messageDiv', '', '');
+            
+            // Validate phone number
+            if (!phoneNumber) {
+                showMessage('messageDiv', 'Please enter a phone number', 'error');
+                return;
+            }
+
+            if (!validatePhoneNumber(phoneNumber)) {
+                showMessage('messageDiv', 'Please enter a valid phone number', 'error');
+                return;
+            }
+
+            currentPhoneNumber = phoneNumber;
+            isProcessing = true;
+            setLoading('sendOTPBtn', 'otpLoading', 'otpBtnText', true);
+
+            try {
+                // Add timeout to prevent hanging requests
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 90000); // 30 second timeout
+
+                const response = await fetch('/send_otp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone_number: phoneNumber }),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    let message = data.message || 'OTP sent successfully';
+                    
+                    if (data.otp) {
+                        message += `<div class="otp-display">Demo OTP: ${data.otp}</div>`;
+                    }
+                    
+                    showMessage('messageDiv', message, 'success');
+                    
+                    // Switch to OTP form after a short delay
+                    setTimeout(() => {
+                        document.getElementById('loginForm').classList.add('hidden');
+                        document.getElementById('otpForm').classList.remove('hidden');
+                        // Focus on OTP input
+                        document.getElementById('otpInput').focus();
+                    }, 9000);
+                } else {
+                    showMessage('messageDiv', data.message || 'Failed to send OTP', 'error');
+                }
+            } catch (error) {
+                console.error('Error sending OTP:', error);
+                if (error.name === 'AbortError') {
+                    showMessage('messageDiv', 'Request timeout. Please try again.', 'error');
+                } else {
+                    showMessage('messageDiv', 'Network error. Please check your connection and try again.', 'error');
+                }
+            } finally {
+                isProcessing = false;
+                setLoading('sendOTPBtn', 'otpLoading', 'otpBtnText', false);
+            }
+        }
+
+        async function verifyOTP() {
+            if (isProcessing) {
+                return;
+            }
+
+            const otp = document.getElementById('otpInput').value.trim();
+            
+            // Clear previous messages
+            showMessage('otpMessageDiv', '', '');
+            
+            if (!otp) {
+                showMessage('otpMessageDiv', 'Please enter the OTP', 'error');
+                return;
+            }
+
+            if (otp.length !== 6 || !/^\d{6}$/.test(otp)) {
+                showMessage('otpMessageDiv', 'Please enter a valid 6-digit OTP', 'error');
+                return;
+            }
+
+            isProcessing = true;
+            setLoading('verifyOTPBtn', 'verifyLoading', 'verifyBtnText', true);
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+                const response = await fetch('/verify_otp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        phone_number: currentPhoneNumber, 
+                        otp: otp 
+                    }),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('otpMessageDiv', 'Login successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1500);
+                } else {
+                    showMessage('otpMessageDiv', data.message || 'Invalid OTP', 'error');
+                }
+            } catch (error) {
+                console.error('Error verifying OTP:', error);
+                if (error.name === 'AbortError') {
+                    showMessage('otpMessageDiv', 'Request timeout. Please try again.', 'error');
+                } else {
+                    showMessage('otpMessageDiv', 'Network error. Please try again.', 'error');
+                }
+            } finally {
+                isProcessing = false;
+                setLoading('verifyOTPBtn', 'verifyLoading', 'verifyBtnText', false);
+            }
+        }
+
+        function resendOTP() {
+            // Reset to initial state
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('otpForm').classList.add('hidden');
+            document.getElementById('phoneNumber').value = currentPhoneNumber;
+            document.getElementById('otpInput').value = '';
+            showMessage('messageDiv', '', '');
+            showMessage('otpMessageDiv', '', '');
+            isProcessing = false;
+            
+            // Focus on phone number input
+            document.getElementById('phoneNumber').focus();
+        }
+
+        // Enhanced Enter key support with event prevention
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent form submission
+                
+                if (!document.getElementById('loginForm').classList.contains('hidden') && !isProcessing) {
+                    sendOTP();
+                } else if (!document.getElementById('otpForm').classList.contains('hidden') && !isProcessing) {
+                    verifyOTP();
+                }
+            }
+        });
+
+        // Prevent form submission on enter
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                    }
+                });
+            });
+        });
+
+        // Auto-format phone number input
+        document.getElementById('phoneNumber').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/[^\d+]/g, '');
+            e.target.value = value;
+        });
+
+        // Auto-format OTP input
+        document.getElementById('otpInput').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/[^\d]/g, '');
+            if (value.length > 6) {
+                value = value.substring(0, 6);
+            }
+            e.target.value = value;
+        });
+    </script>
+</body>
+</html>

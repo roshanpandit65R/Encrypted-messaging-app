@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureChat Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f0f2f5;
+            height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 350px;
+            background: white;
+            border-right: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .contacts-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .add-contact {
+            padding: 1rem;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .add-contact input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #5a67d8;
+        }
+
+        .contacts-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .contact-item {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+        }
+
+        .contact-item:hover {
+            background: #f8f9fa;
+        }
+
+        .contact-item.active {
+            background: #e3f2fd;
+            border-right: 3px solid #667eea;
+        }
+
+        .contact-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 1rem;
+            font-weight: bold;
+        }
+
+        .contact-info {
+            flex: 1;
+        }
+
+        .contact-name {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .contact-phone {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .chat-header {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #f0f2f5;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .message.sent {
+            flex-direction: row-reverse;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 0.75rem 1rem;
+            border-radius: 18px;
+            position: relative;
+        }
+
+        .message.sent .message-bubble {
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.received .message-bubble {
+            background: white;
+            border: 1px solid #ddd;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 0.25rem;
+        }
+
+        .encrypted-message {
+            border: 2px dashed #ff9800;
+            background: #fff3e0 !important;
+            color: #e65100 !important;
+        }
+
+        .decrypt-section {
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .decrypt-input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .decrypt-btn {
+            padding: 0.5rem;
+            background: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .message-input-area {
+            padding: 1rem;
+            background: white;
+            border-top: 1px solid #ddd;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+        }
+
+        .encrypt-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 1rem;
+        }
+
+        .encrypt-checkbox {
+            width: 18px;
+            height: 18px;
+        }
+
+        .send-btn {
+            background: #667eea;
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .send-btn:hover {
+            background: #5a67d8;
+        }
+
+        .no-chat-selected {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .decrypt-code-display {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            color: #2e7d32;
+            padding: 0.5rem;
+            border-radius: 5px;
+            margin-top: 0.5rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .encrypted-image {
+            max-width: 200px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 40vh;
+            }
+            
+            .chat-area {
+                height: 60vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="header">
+            <div class="logo">🔐 SecureChat</div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+        
+        <div class="add-contact">
+            <input type="tel" id="contactPhone" placeholder="Contact Phone Number" />
+            <input type="text" id="contactName" placeholder="Contact Name (Optional)" />
+            <button class="btn" onclick="addContact()">Add Contact</button>
+        </div>
+        
+        <div class="contacts-list" id="contactsList">
+            <!-- Contacts will be loaded here -->
+        </div>
+    </div>
+
+    <div class="chat-area">
+        <div class="chat-header" id="chatHeader">
+            <div class="no-chat-selected">Select a contact to start chatting</div>
+        </div>
+        
+        <div class="messages-container" id="messagesContainer">
+            <!-- Messages will be loaded here -->
+        </div>
+        
+        <div class="message-input-area" id="messageInputArea" style="display: none;">
+            <input type="text" class="message-input" id="messageInput" placeholder="Type a message..." />
+            <div class="encrypt-toggle">
+                <input type="checkbox" class="encrypt-checkbox" id="encryptToggle" />
+                <label for="encryptToggle">🔒 Encrypt</label>
+            </div>
+            <button class="send-btn" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <!-- Decrypt Code Modal -->
+    <div id="decryptModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeDecryptModal()">&times;</span>
+            <h2>Message Sent Successfully!</h2>
+            <p>Your encrypted message has been sent. Share this decrypt code with the recipient:</p>
+            <div class="decrypt-code-display" id="decryptCodeDisplay"></div>
+            <p><small>⚠️ Keep this code safe. Without it, the message cannot be decrypted!</small></p>
+        </div>
+    </div>
+
+    <script>
+        let currentContact = null;
+        let contacts = [];
+        let messages = [];
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadContacts();
+            loadMessages();
+            setInterval(loadMessages, 30000); // Refresh messages every 3 seconds
+        });
+
+        async function loadContacts() {
+            try {
+                const response = await fetch('/get_contacts');
+                contacts = await response.json();
+                displayContacts();
+            } catch (error) {
+                console.error('Error loading contacts:', error);
+            }
+        }
+
+        function displayContacts() {
+            const contactsList = document.getElementById('contactsList');
+            contactsList.innerHTML = '';
+
+            if (contacts.length === 0) {
+                contactsList.innerHTML = '<div style="padding: 1rem; text-align: center; color: #666;">No contacts added yet</div>';
+                return;
+            }
+
+            contacts.forEach(contact => {
+                const contactItem = document.createElement('div');
+                contactItem.className = 'contact-item';
+                if (currentContact && currentContact.phone === contact.phone) {
+                    contactItem.classList.add('active');
+                }
+                
+                contactItem.innerHTML = `
+                    <div class="contact-avatar">${contact.name.charAt(0).toUpperCase()}</div>
+                    <div class="contact-info">
+                        <div class="contact-name">${contact.name}</div>
+                        <div class="contact-phone">${contact.phone}</div>
+                    </div>
+                `;
+                
+                contactItem.onclick = () => selectContact(contact);
+                contactsList.appendChild(contactItem);
+            });
+        }
+
+        function selectContact(contact) {
+            currentContact = contact;
+            document.getElementById('chatHeader').innerHTML = `
+                <div class="contact-avatar">${contact.name.charAt(0).toUpperCase()}</div>
+                <div class="contact-info">
+                    <div class="contact-name">${contact.name}</div>
+                    <div class="contact-phone">${contact.phone}</div>
+                </div>
+            `;
+            document.getElementById('messageInputArea').style.display = 'flex';
+            displayContacts(); // Refresh to show active state
+            displayMessages();
+        }
+
+        async function addContact() {
+            const phone = document.getElementById('contactPhone').value.trim();
+            const name = document.getElementById('contactName').value.trim() || phone;
+
+            if (!phone) {
+                alert('Please enter a phone number');
+                return;
+            }
+
+            try {
+                const response = await fetch('/add_contact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contact_phone: phone,
+                        contact_name: name
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('contactPhone').value = '';
+                    document.getElementById('contactName').value = '';
+                    loadContacts();
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert('Error adding contact');
+            }
+        }
+
+        async function loadMessages() {
+            try {
+                const response = await fetch('/get_messages');
+                messages = await response.json();
+                if (currentContact) {
+                    displayMessages();
+                }
+            } catch (error) {
+                console.error('Error loading messages:', error);
+            }
+        }
+
+        function displayMessages() {
+            if (!currentContact) return;
+
+            const container = document.getElementById('messagesContainer');
+            const filteredMessages = messages.filter(msg => 
+                (msg.sender === currentContact.phone) || 
+                (msg.receiver === currentContact.phone)
+            );
+
+            container.innerHTML = '';
+
+            if (filteredMessages.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">No messages yet. Start the conversation!</div>';
+                return;
+            }
+
+            filteredMessages.reverse().forEach(msg => {
+                const messageDiv = document.createElement('div');
+                const isCurrentUser = msg.receiver === currentContact.phone;
+                messageDiv.className = `message ${isCurrentUser ? 'sent' : 'received'}`;
+
+                let messageContent = '';
+                if (msg.is_encrypted) {
+                    messageContent = `
+                        <div class="message-bubble encrypted-message">
+                            <div>🔒 Encrypted Message</div>
+                            <img src="/get_encrypted_image/${msg.id}" class="encrypted-image" alt="Encrypted content" />
+                            ${!isCurrentUser ? `
+                                <div class="decrypt-section">
+                                    <input type="text" class="decrypt-input" placeholder="Enter decrypt code" id="decrypt_${msg.id}" />
+                                    <button class="decrypt-btn" onclick="decryptMessage(${msg.id})">Decrypt</button>
+                                </div>
+                                <div id="decrypted_${msg.id}" style="margin-top: 0.5rem; display: none;"></div>
+                            ` : ''}
+                            ${isCurrentUser && msg.decrypt_code ? `
+                                <div class="decrypt-code-display">
+                                    Decrypt Code: ${msg.decrypt_code}
+                                </div>
+                            ` : ''}
+                            <div class="message-time">${formatTime(msg.timestamp)}</div>
+                        </div>
+                    `;
+                } else {
+                    messageContent = `
+                        <div class="message-bubble">
+                            <div>${msg.message}</div>
+                            <div class="message-time">${formatTime(msg.timestamp)}</div>
+                        </div>
+                    `;
+                }
+
+                messageDiv.innerHTML = messageContent;
+                container.appendChild(messageDiv);
+            });
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const messageText = document.getElementById('messageInput').value.trim();
+            const isEncrypted = document.getElementById('encryptToggle').checked;
+
+            if (!messageText || !currentContact) return;
+
+            try {
+                const response = await fetch('/send_message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        receiver_phone: currentContact.phone,
+                        message_text: messageText,
+                        is_encrypted: isEncrypted
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('messageInput').value = '';
+                    document.getElementById('encryptToggle').checked = false;
+                    
+                    if (data.decrypt_code) {
+                        document.getElementById('decryptCodeDisplay').textContent = data.decrypt_code;
+                        document.getElementById('decryptModal').style.display = 'block';
+                    }
+                    
+                    loadMessages();
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert('Error sending message');
+            }
+        }
+
+        async function decryptMessage(messageId) {
+            const decryptCode = document.getElementById(`decrypt_${messageId}`).value.trim();
+            
+            if (!decryptCode) {
+                alert('Please enter decrypt code');
+                return;
+            }
+
+            try {
+                const response = await fetch('/decrypt_message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message_id: messageId,
+                        decrypt_code: decryptCode
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    const decryptedDiv = document.getElementById(`decrypted_${messageId}`);
+                    decryptedDiv.innerHTML = `<div style="background: #e8f5e8; padding: 0.5rem; border-radius: 5px; margin-top: 0.5rem;"><strong>Decrypted:</strong> ${data.message}</div>`;
+                    decryptedDiv.style.display = 'block';
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert('Error decrypting message');
+            }
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function closeDecryptModal() {
+            document.getElementById('decryptModal').style.display = 'none';
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = '/logout';
+            }
+        }
+
+        // Enter key to send message
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('decryptModal');
+            if (event.target === modal) {
+                closeDecryptModal();
+            }
+        }
+    </script>
+</body>
+</html>
