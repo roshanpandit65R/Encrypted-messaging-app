@@ -89,7 +89,23 @@ http://localhost:5000
 ```
 
 ---
+## Project Flow
 
+<img width="1917" height="917" alt="1" src="https://github.com/user-attachments/assets/b90d3f62-4031-43fd-8423-e819a7e282e9" />
+<img width="1918" height="906" alt="2" src="https://github.com/user-attachments/assets/481237d7-708a-42b0-ad8c-05ed54340ee5" />
+
+<img width="1919" height="916" alt="3" src="https://github.com/user-attachments/assets/cad75383-a9da-426c-8760-ff66f33478ad" />
+
+<img width="1916" height="912" alt="4" src="https://github.com/user-attachments/assets/d71ad9af-1cba-475f-8d75-f511c95cc58e" />
+<img width="1823" height="870" alt="5" src="https://github.com/user-attachments/assets/466fea16-09e9-4f9f-9704-3f0e7c7c6895" />
+
+
+<img width="1919" height="923" alt="6" src="https://github.com/user-attachments/assets/f3fa4ee6-22cc-4ad2-b5c1-c4efee5cd636" />
+
+
+<img width="1919" height="965" alt="8" src="https://github.com/user-attachments/assets/b3356321-aaa8-4e74-8288-e92d477b8a0f" />
+
+<img width="1919" height="933" alt="7" src="https://github.com/user-attachments/assets/1be70b98-654d-4e3d-8124-252e9bd68e03" />
 ## 🧠 How It Works
 
 1. **User Login:**
